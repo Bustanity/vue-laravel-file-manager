@@ -11,16 +11,21 @@
         </div>
         <div class="modal-body text-center">
             <template v-if="showCropperModule">
-                <cropper-module v-bind:imgSrc="imgSrc"
+                <cropper-module v-bind:fileSrc="fileSrc"
                                 v-bind:maxHeight="maxHeight"
                                 v-on:closeCropper="closeCropper"></cropper-module>
             </template>
             <transition v-else name="fade" mode="out-in">
-                <i v-if="!imgSrc" class="fas fa-spinner fa-spin fa-5x p-5 text-muted"></i>
-                <img v-else
-                     v-bind:src="imgSrc"
+                <i v-if="!fileSrc" class="fas fa-spinner fa-spin fa-5x p-5 text-muted"></i>
+
+                <img v-else-if="previewType == 'image'"
+                     v-bind:src="fileSrc"
                      v-bind:alt="selectedItem.basename"
                      v-bind:style="{'max-height': maxHeight+'px'}">
+
+                <pdf
+                  v-else-if="previewType == 'pdf'"
+                  v-bind:src="fileSrc"></pdf>
             </transition>
         </div>
         <div v-if="showFooter" class="d-flex justify-content-between">
@@ -38,6 +43,7 @@
 </template>
 
 <script>
+import pdf from 'vue-pdf';
 import CropperModule from './../additions/Cropper.vue';
 import modal from './../mixins/modal';
 import translate from './../../../mixins/translate';
@@ -47,15 +53,16 @@ import GET from './../../../http/get';
 export default {
   name: 'Preview',
   mixins: [modal, translate, helper],
-  components: { CropperModule },
+  components: { CropperModule, pdf },
   data() {
     return {
       showCropperModule: false,
-      imgSrc: '',
+      fileSrc: '',
+      previewType: null,
     };
   },
   created() {
-    this.loadImage();
+    this.loadFile();
   },
   computed: {
     /**
@@ -103,6 +110,23 @@ export default {
     },
   },
   methods: {
+    resolvePreviewType(extension) {
+      let result;
+
+      const previewTypes = {
+        image: this.$store.state.fm.settings.imageExtensions,
+        pdf: this.$store.state.fm.settings.pdfExtensions,
+      };
+
+      Object.keys(previewTypes).forEach((type) => {
+        if (previewTypes[type].includes(extension.toLowerCase())) {
+          result = type;
+        }
+      });
+
+      return result;
+    },
+
     /**
      * Can we crop this image?
      * @param extension
@@ -117,13 +141,15 @@ export default {
      */
     closeCropper() {
       this.showCropperModule = false;
-      this.loadImage();
+      this.loadFile();
     },
 
     /**
      * Load image
      */
-    loadImage() {
+    loadFile() {
+      this.previewType = this.resolvePreviewType(this.selectedItem.extension);
+
       // if authorization required
       if (this.auth) {
         GET.preview(
@@ -133,10 +159,10 @@ export default {
           const mimeType = response.headers['content-type'].toLowerCase();
           const imgBase64 = Buffer.from(response.data, 'binary').toString('base64');
 
-          this.imgSrc = `data:${mimeType};base64,${imgBase64}`;
+          this.fileSrc = `data:${mimeType};base64,${imgBase64}`;
         });
       } else {
-        this.imgSrc = `${this.$store.getters['fm/settings/baseUrl']}preview?disk=${this.selectedDisk}&path=${encodeURIComponent(this.selectedItem.path)}&v=${this.selectedItem.timestamp}`;
+        this.fileSrc = `${this.$store.getters['fm/settings/baseUrl']}preview?disk=${this.selectedDisk}&path=${encodeURIComponent(this.selectedItem.path)}&v=${this.selectedItem.timestamp}`;
       }
     },
   },

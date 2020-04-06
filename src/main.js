@@ -2,12 +2,15 @@
 import '@babel/polyfill';
 import Vue from 'vue';
 import Vuex from 'vuex';
+
 // store
 import fm from './store';
+
 // App
 import App from './FileManager.vue';
 
 Vue.use(Vuex);
+// Vue.use(require('pdfvuer'));
 
 // create new store
 const store = new Vuex.Store({

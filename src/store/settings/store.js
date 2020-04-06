@@ -138,6 +138,8 @@ export default {
       // Image extensions for view and preview
       imageExtensions: ['png', 'jpg', 'jpeg', 'gif'],
 
+      pdfExtensions: ['pdf'],
+
       // Image extensions for cropping
       cropExtensions: ['png', 'jpg', 'jpeg'],
 
