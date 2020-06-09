@@ -162,7 +162,11 @@ export default {
           this.fileSrc = `data:${mimeType};base64,${imgBase64}`;
         });
       } else {
-        this.fileSrc = `${this.$store.getters['fm/settings/baseUrl']}preview?disk=${this.selectedDisk}&path=${encodeURIComponent(this.selectedItem.path)}&v=${this.selectedItem.timestamp}`;
+        if (this.previewType === 'pdf') {
+          this.fileSrc = `${this.$store.getters['fm/settings/baseUrl']}../storage/${this.selectedDisk}/${this.selectedItem.path}`;
+        } else {
+          this.fileSrc = `${this.$store.getters['fm/settings/baseUrl']}preview?disk=${this.selectedDisk}&path=${encodeURIComponent(this.selectedItem.path)}&v=${this.selectedItem.timestamp}`;
+        }
       }
     },
   },
